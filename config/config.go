@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	uuid "github.com/nu7hatch/gouuid"
@@ -15,7 +15,9 @@ type Config struct {
 	HttpServerOptions HttpServerOptionsConfig
 }
 
-func generateRandomNodeID() string {
+func generateRandomID(prefix string) string {
 	u, _ := uuid.NewV4()
-	return "solo-" + u.String()
+	return prefix + u.String()
 }
+
+var Debug bool = true

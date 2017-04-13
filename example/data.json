@@ -1,0 +1,117 @@
+{
+  "bodyData": {
+    "interval": 10,
+    "select": [
+      {
+        "column": "PaymentAmount",
+        "operation": "sum",
+        "as": "PaymentAmountSum"
+      },
+      {
+        "column": "ItemNo",
+        "operation": "count",
+        "as": "ItemNoCount"
+      }
+
+    ],
+    "where": {
+      "and": [
+        {
+          "column": "ItemNo",
+          "operation": "equal",
+          "value": "1234567"
+        },
+        {
+          "column": "PaymentAmount",
+          "operation": "gte",
+          "value": "10000"
+        },
+        {
+          "column": "ShippingAddress",
+          "operation": "match",
+          "value": "서울시"
+        }
+
+      ],
+      "or": null
+    },
+    "groupBy": [
+      {
+        "column": "ShippingAddress",
+        "pattern": "구"
+      }
+    ]
+
+  },
+
+  // 디비 쌓기 및 조회용
+  "rethinkdata":{
+    //Primary key
+    "_id": "row key",
+    //사용자 id
+    "_userId": "사용자 ID ",
+    //사용자가 입력한 interval
+    "interval": "5",
+    //interval의 시작시간-종료시간
+    "starttime": "2017-04-06 12:56:00",
+    "endtime": "2017-04-06 12:56:05",
+    "groupBy": "ShippingAddress", //groupby 없을 경우 null
+
+    //interval 내 집계 값
+    //bodydata의 사용자 입력값에 value를 추가하여 던져줌
+    "Data": [
+      {
+        "group": "서울시 강남구",
+        "stat": [
+          {
+            "column": "PaymentAmount",
+            "operation": "sum",
+            "value" : 12348579400
+          },
+          {
+            "column": "ItemNo",
+            "operation": "count",
+            "value" : 4038
+          }
+        ]
+      },
+      {
+        "group": "서울시 서초구",
+        "stat": [
+          {
+            "column": "PaymentAmount",
+            "operation": "sum",
+            "value" : 12348579400
+          },
+          {
+            "column": "ItemNo",
+            "operation": "count",
+            "value" : 4038
+          }
+        ]
+      }
+    ],
+
+    //또는
+    "Data_": [
+      {
+        "group": null,
+        "stat": [
+          {
+            "column": "PaymentAmount",
+            "operation": "sum",
+            "value" : 12348579400
+          },
+          {
+            "column": "ItemNo",
+            "operation": "count",
+            "value" : 4038
+          }
+        ]
+      }
+    ]
+
+  }
+
+
+}
