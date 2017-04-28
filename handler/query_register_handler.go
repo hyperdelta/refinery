@@ -8,7 +8,6 @@ import (
 	"github.com/hyperdelta/refinery/processor"
 	"github.com/hyperdelta/refinery/config"
 	"encoding/json"
-	"strings"
 )
 
 type QueryRegisterHandler struct {
@@ -50,10 +49,12 @@ func (h *QueryRegisterHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request
 	var q, err = processor.GetQueryObject(body);
 
 	if err == nil {
-		var _, errAgg = processor.CreateAggregatorFromQuery(q);
+		var ag, errAgg = processor.CreateAggregatorFromQuery(q);
 
 		if errAgg == nil {
 			m.Result = "success";
+			m.Id = ag.Info.Id;
+			m.Endpoint = ag.Info.Endpoint;
 		} else {
 			m.Result = "fail";
 			m.Message = errAgg.Error()
@@ -66,5 +67,4 @@ func (h *QueryRegisterHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request
 	ret, _ := json.Marshal(m)
 
 	rw.Write(ret)
-
 }

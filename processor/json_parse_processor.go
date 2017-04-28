@@ -14,10 +14,15 @@ func NewJsonParseProcessor() *JsonParseProcessor {
 }
 
 
-func (p* JsonParseProcessor) process(in <-chan interface{}) <-chan interface{} {
-	out := make(<-chan interface{})
+func (p* JsonParseProcessor) process(in chan []byte) chan []byte {
+	out := make(chan []byte)
 
-
+	go func(){
+		select {
+		case data := <-in:
+			out <- data
+		}
+	}()
 
 	return out
 }

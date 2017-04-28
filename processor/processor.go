@@ -5,20 +5,22 @@ type Processor struct {
 }
 
 type ProcessorInterface interface {
-	process(in <-chan interface{}) <-chan interface{}
+	process(in chan []byte) chan []byte
 }
 
-func ChainProcessors(processors []ProcessorInterface) <-chan interface{} {
-	in := make(<-chan interface{})
-	var out <-chan interface{} = nil
+func ChainProcessors(processors []ProcessorInterface) (chan []byte, chan []byte) {
+	var in = make(chan []byte)
+	var out chan []byte = nil;
+
+	var tmp_in chan []byte = in
+	var tmp_out chan []byte
 
 	for _, processor := range processors {
-		if out != nil {
-			in = out
-		}
-
-		out = processor.process(in)
+		tmp_out = processor.process(tmp_in)
+		tmp_in = tmp_out
 	}
 
-	return in
+	out = tmp_out
+
+	return in, out
 }

@@ -15,7 +15,7 @@ type Config struct {
 	HttpServerOptions HttpServerOptionsConfig
 }
 
-func generateRandomID(prefix string) string {
+func GenerateRandomID(prefix string) string {
 	u, _ := uuid.NewV4()
 	return prefix + u.String()
 }
