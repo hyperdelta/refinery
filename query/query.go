@@ -1,11 +1,14 @@
-package processor
+package query
 
 import (
 	"encoding/json"
-	"github.com/hyperdelta/refinery/config"
-	"log"
-	"fmt"
 	"errors"
+	"github.com/hyperdelta/refinery/log"
+)
+
+var (
+	logger *log.Logger = log.Get()
+	resolver ValueResolver
 )
 
 type Query struct {
@@ -14,7 +17,6 @@ type Query struct {
 	WhereQuery   WhereQuery			`json:"where"`
 	GroupByQuery []GroupByQueryItem		`json:"groupBy"`
 }
-
 
 /**
 {
@@ -29,31 +31,21 @@ type SelectQueryItem struct {
 	As string			`json:"as"`
 }
 
-type WhereQuery struct {
-	And []WhereQueryItem	`json:"and"`
-	Or []WhereQueryItem		`json:"or"`
-}
-
-/**
-{
-	"column": "ItemNo",
-	"operation": "equal",
- 	"value": "1234567"
-}
- */
-type WhereQueryItem struct {
-	Column string		`json:"column"`
-	Operation string	`json:"operation"`
-	Value string		`json:"value"`
-}
-
 type GroupByQueryItem struct {
 	Column string 	`json:"column"`
 	Pattern string 	`json:"pattern"`
 }
 
-func GetQueryObject(body []byte) (*Query, error) {
-	q := Query{}
+type ValueResolver interface {
+	Get(column string) string
+}
+
+func SetValueResolver(resolver ValueResolver) {
+	resolver = resolver
+}
+
+func Get(body []byte) (*Query, error) {
+	q := new(Query)
 
 	err := json.Unmarshal(body, &q)
 
@@ -61,20 +53,16 @@ func GetQueryObject(body []byte) (*Query, error) {
 		panic(err)
 	}
 
-	if config.Debug {
-		log.Print("GetQueryObject() register")
-		fmt.Println(q)
-	}
+	logger.Debug("Get() register")
 
 	// query validation
-	err = validate(q)
+	err = validate(*q)
 
 	if err != nil {
 		return nil, err
 	} else {
-		return &q, nil
+		return q, nil
 	}
-
 }
 
 func validate(q Query) error {
@@ -86,3 +74,6 @@ func validate(q Query) error {
 	return nil
 }
 
+func (q *Query) GetBytes() ([]byte, error) {
+	return json.Marshal(q)
+}

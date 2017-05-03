@@ -2,17 +2,18 @@ package test
 
 import (
 	"testing"
-	"github.com/hyperdelta/refinery/processor"
 	"log"
+	"github.com/hyperdelta/refinery/query"
+	"github.com/hyperdelta/refinery/pipeline"
 )
 
 func TestAggregator(t *testing.T) {
 
-	var q, _ = processor.GetQueryObject(queryJson)
-	var agg, _ = processor.CreateAggregatorFromQuery(q)
-	agg.In <- dataJson
+	var q, _ = query.Get(queryJson)
+	var p, _ = pipeline.CreateFromQuery(q)
+	p.In <- dataJson
 
-	log.Print(string(<- agg.Out))
+	log.Print(string(<- p.Out))
 }
 
 var dataJson []byte = []byte(`
@@ -27,7 +28,7 @@ var queryJson []byte = []byte(`{
 "interval": 10,
 "select": [
 {
-"column": "PaymentAmount",
+"column": "ItemNo",
 "operation": "sum",
 "as": "PaymentAmountSum"
 },

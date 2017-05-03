@@ -1,8 +1,14 @@
 package processor
 
+import "github.com/hyperdelta/refinery/log"
+
 type Processor struct {
 
 }
+
+var (
+	logger *log.Logger = log.Get()
+)
 
 type ProcessorInterface interface {
 	process(in chan []byte) chan []byte

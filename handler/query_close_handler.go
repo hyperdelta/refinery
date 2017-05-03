@@ -2,11 +2,9 @@ package handler
 
 import (
 	"net/http"
-	"log"
 	"github.com/buger/jsonparser"
 	"github.com/gorilla/mux"
 	"io/ioutil"
-	"github.com/hyperdelta/refinery/config"
 )
 
 type QueryCloseHandler struct {
@@ -26,12 +24,8 @@ func NewQueryCloseHandler(r *mux.Router) *QueryCloseHandler {
 	register handler path
  */
 func (h *QueryCloseHandler) RegisterHandlePath() {
-
 	h.router.Handle("/_close/{id}", h)
-
-	if config.Debug {
-		log.Print("register path /_close/{id}, from QueryCloseHandler")
-	}
+	logger.Debug("register path /_close/{id}")
 }
 
 func (h *QueryCloseHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {

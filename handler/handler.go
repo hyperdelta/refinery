@@ -2,6 +2,11 @@ package handler
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/hyperdelta/refinery/log"
+)
+
+var (
+	logger *log.Logger = log.Get()
 )
 
 type Handler struct {

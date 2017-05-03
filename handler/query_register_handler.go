@@ -2,12 +2,11 @@ package handler
 
 import (
 	"net/http"
-	"log"
 	"github.com/gorilla/mux"
 	"io/ioutil"
-	"github.com/hyperdelta/refinery/processor"
-	"github.com/hyperdelta/refinery/config"
 	"encoding/json"
+	"github.com/hyperdelta/refinery/query"
+	"github.com/hyperdelta/refinery/pipeline"
 )
 
 type QueryRegisterHandler struct {
@@ -35,10 +34,7 @@ func NewQueryRegisterHandler(r *mux.Router) *QueryRegisterHandler {
  */
 func (h *QueryRegisterHandler) RegisterHandlePath() {
 	h.router.Handle("/_register", h)
-
-	if config.Debug {
-		log.Print("register path /_register, from QueryRegisterHandler")
-	}
+	logger.Debug("register path /_register")
 }
 
 func (h *QueryRegisterHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -46,18 +42,18 @@ func (h *QueryRegisterHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request
 	body, _ := ioutil.ReadAll(r.Body)
 
 	var m = QueryRegisterResponseModel{};
-	var q, err = processor.GetQueryObject(body);
+	var q, err = query.Get(body);
 
 	if err == nil {
-		var ag, errAgg = processor.CreateAggregatorFromQuery(q);
+		var p, err = pipeline.CreateFromQuery(q);
 
-		if errAgg == nil {
+		if p != nil {
 			m.Result = "success";
-			m.Id = ag.Info.Id;
-			m.Endpoint = ag.Info.Endpoint;
+			m.Id = p.Id;
+			m.Endpoint = p.Endpoint;
 		} else {
 			m.Result = "fail";
-			m.Message = errAgg.Error()
+			m.Message = err.Error()
 		}
 	} else {
 		m.Result = "fail";

@@ -7,12 +7,13 @@ import (
 	"github.com/hyperdelta/refinery/handler"
 	"strconv"
 	"github.com/hyperdelta/refinery/config"
-	"log"
+	"github.com/hyperdelta/refinery/log"
 )
 
 var (
 	conf = config.Config{ListenAddress: "", ListenPort:3000}
 	defaultRouter *mux.Router
+	logger *log.Logger = log.Get()
 )
 
 func main() {
@@ -24,10 +25,7 @@ func main() {
 	m.Handle("/", defaultRouter)
 	http.DefaultServeMux = m
 
-
-	if config.Debug {
-		log.Print("Listen on " + conf.ListenAddress + strconv.Itoa(conf.ListenPort))
-	}
+	logger.Info("Listen on " + conf.ListenAddress + strconv.Itoa(conf.ListenPort))
 
 	http.ListenAndServe(conf.ListenAddress + ":" + strconv.Itoa(conf.ListenPort), nil)
 

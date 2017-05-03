@@ -4,6 +4,7 @@ import (
 	"github.com/buger/jsonparser"
 	"strings"
 	"strconv"
+	"github.com/hyperdelta/refinery/query"
 )
 
 const (
@@ -13,7 +14,7 @@ const (
 
 type FilterProcessor struct {
 	Processor
-	whereQuery WhereQuery
+	whereQuery query.WhereQuery
 	operation int // and, or
 	compareList []CompareItem
 }
@@ -24,11 +25,11 @@ type CompareItem struct {
 	value string
 }
 
-func NewFilterProcessor(w WhereQuery) *FilterProcessor {
+func NewFilterProcessor(w query.WhereQuery) *FilterProcessor {
 	fp := new(FilterProcessor)
 	fp.whereQuery = w
 
-	var list []WhereQueryItem
+	var list []query.WhereQuery
 
 	if (len(w.And) > 0) {
 		fp.operation = AND
@@ -124,7 +125,6 @@ func (p* FilterProcessor) doOperation(lval string, op string, rval string) bool 
 			ret = strings.Contains(lval, rval);
 		}
 	}
-
 
 	return ret;
 }
