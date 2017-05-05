@@ -8,7 +8,6 @@ import (
 
 var (
 	logger *log.Logger = log.Get()
-	resolver ValueResolver
 )
 
 type Query struct {
@@ -33,15 +32,7 @@ type SelectQueryItem struct {
 
 type GroupByQueryItem struct {
 	Column string 	`json:"column"`
-	Pattern string 	`json:"pattern"`
-}
-
-type ValueResolver interface {
-	Get(column string) string
-}
-
-func SetValueResolver(resolver ValueResolver) {
-	resolver = resolver
+	Depth  int 	`json:"depth"`
 }
 
 func Get(body []byte) (*Query, error) {

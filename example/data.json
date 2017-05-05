@@ -4,7 +4,7 @@
     "select": [
       {
         "column": "PaymentAmount",
-        "operation": "sum",
+        "operation": "sum", // sum, count, min, max, medium
         "as": "PaymentAmountSum"
       },
       {
@@ -38,7 +38,7 @@
     "groupBy": [
       {
         "column": "ShippingAddress",
-        "pattern": "구"
+        "depth": 2  // 서울시 강남구
       }
     ]
 

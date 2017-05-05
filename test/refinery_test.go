@@ -5,15 +5,61 @@ import (
 	"log"
 	"github.com/hyperdelta/refinery/query"
 	"github.com/hyperdelta/refinery/pipeline"
+	"github.com/hyperdelta/refinery/trie"
+	"time"
+	"fmt"
 )
 
-func TestAggregator(t *testing.T) {
+func TestPipeline(t *testing.T) {
 
 	var q, _ = query.Get(queryJson)
-	var p, _ = pipeline.CreateFromQuery(q)
-	p.In <- dataJson
+	pipeline.CreateFromQuery(q)
 
-	log.Print(string(<- p.Out))
+	for _, p := range pipeline.PipelineList {
+		go func() {
+			for {
+				select {
+				case data := <- p.Out:
+					fmt.Printf("\n%s\n", &data)
+				}
+			}
+		}()
+	}
+
+	go func() {
+		for {
+			for _, p := range pipeline.PipelineList {
+				log.Print("send data")
+				p.In <- dataJson
+				time.Sleep(time.Second)
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 3)
+}
+
+func TestTrie(t *testing.T) {
+	var tt = trie.NewTrie()
+
+	tt.Add("data1", "a", "b", "c")
+	tt.Add("data2", "a", "b", "d")
+
+	var retData = tt.Retrieve("a", "b", "c")
+	var retData2 = tt.Retrieve("a", "b", "d")
+	var retData3 = tt.Retrieve("a", "b")
+
+	if "data1" !=  retData {
+		t.Fatal("TestTrie Fail, expected data = data1, retrieve data = " + retData.(string))
+	}
+
+	if  "data2" != retData2 {
+		t.Fatal("TestTrie Fail, expected data = data2, retrieve data = " + retData2.(string))
+	}
+
+	if retData3 != nil {
+		t.Fatal("TestTrie Fail, expected data = nil, retrieve data = " + retData3.(string))
+	}
 }
 
 var dataJson []byte = []byte(`
@@ -43,7 +89,7 @@ var queryJson []byte = []byte(`{
 "and": [
 {
 "column": "ItemNo",
-"operation": "equal",
+"operation": "eq",
 "value": "1234567"
 },
 {
@@ -63,7 +109,7 @@ var queryJson []byte = []byte(`{
 "groupBy": [
 {
 "column": "ShippingAddress",
-"pattern": "구"
+"depth": 2
 }
 ]
 

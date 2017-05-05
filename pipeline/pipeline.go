@@ -21,8 +21,8 @@ const (
 )
 
 type Pipeline struct {
-	In chan []byte	// input channel
-	Out chan []byte	// output channel
+	In chan interface{}	// input channel
+	Out chan interface{}	// output channel
 
 	Lifetime int
 	Endpoint string
@@ -38,6 +38,7 @@ func CreateFromQuery(q *query.Query) (*Pipeline, error) {
 	var err error
 
 	p.Initialize(q)
+	PipelineList[p.Id] = p
 
 	return p, err
 }
@@ -151,9 +152,9 @@ func (p* Pipeline) SetupProcessors(q *query.Query) error {
 	var processors []processor.ProcessorInterface
 	var err error
 
-	processors = append(processors, processor.NewJsonParseProcessor())
+	processors = append(processors, processor.NewJsonParseProcessor(q))
 	processors = append(processors, processor.NewFilterProcessor(q.WhereQuery))
-	processors = append(processors, processor.NewSelectProcessor(q.SelectFields, q.GroupByQuery))
+	processors = append(processors, processor.NewStatisticProcessor(q.Interval, q.SelectFields, q.GroupByQuery))
 
 	// entry point
 	in, out := processor.ChainProcessors(processors)

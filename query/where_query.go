@@ -29,30 +29,52 @@ type TerminalQuery struct {
 	Value string			`json:"value"`
 }
 
-func (w *WhereQuery) eval() bool {
+func (w *WhereQuery) Eval(data map[string]string) bool {
 	if w.And != nil {
 		for _, q := range w.And {
-			if q.eval() == false {
+			if q.Eval(data) == false {
 				return false
 			}
 		}
-
 		return true
 	} else if w.Or != nil {
 
 		for _, q := range w.Or {
-			if (q.eval()) {
+			if (q.Eval(data)) {
 				return true
 			}
 		}
 		return false
 	} else {
 		// find lval
-		return evalTerm(resolver.Get(w.Column), w.Operation, w.Value)
+		var lval = data[w.Column]
+		result := evalTerm(lval, w.Operation, w.Value)
+
+		logger.Debug("lval = " + lval + " op = " + w.Operation +
+			" rval = " + w.Value + ", result = " + strconv.FormatBool(result))
+
+		return result
+	}
+}
+
+func (w *WhereQuery) GetColumnListFromQuery(list *[][]string) {
+	if w.And != nil {
+		for _, q := range w.And {
+			q.GetColumnListFromQuery(list)
+		}
+	} else if w.Or != nil {
+		for _, q := range w.Or {
+			q.GetColumnListFromQuery(list)
+		}
+	} else {
+		// terminal
+		*list = append(*list, strings.Split(w.Column, "."))
 	}
 }
 
 func evalTerm(lval string, op string, rval string) bool {
+
+	var result bool = false
 
 	// string operation
 	switch op {
@@ -65,7 +87,7 @@ func evalTerm(lval string, op string, rval string) bool {
 	f_rval, rval_err := strconv.ParseFloat(rval, 64);
 
 	if lval_err != nil || rval_err != nil {
-		return false
+		result = false
 	}
 
 	switch op {
@@ -83,7 +105,7 @@ func evalTerm(lval string, op string, rval string) bool {
 		return f_lval < f_rval
 	}
 
-	return false
+	return result
 }
 
 func (w *WhereQuery) Validate() error {
