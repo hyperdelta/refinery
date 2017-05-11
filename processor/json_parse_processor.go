@@ -83,11 +83,15 @@ func (p* JsonParseProcessor) getDataMap(data []byte) map[string]string {
 	result := make(map[string]string)
 
 	jsonparser.EachKey(data, func(idx int, value []byte, vt jsonparser.ValueType, err error){
+		var key string = strings.Join(p.columnPathList[idx], ".")
+
 		if err == nil {
-			var key string = strings.Join(p.columnPathList[idx], ".")
 			logger.Debug("key = " + key + " value = " + string(value))
 
 			result[key] = string(value)
+		} else {
+			logger.Error("cannot find column " + key + " in data" )
+			logger.Error(err)
 		}
 	}, p.columnPathList...)
 

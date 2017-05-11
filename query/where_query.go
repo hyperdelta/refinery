@@ -47,6 +47,7 @@ func (w *WhereQuery) Eval(data map[string]string) bool {
 		return false
 	} else {
 		// find lval
+		logger.Debug(data)
 		var lval = data[w.Column]
 		result := evalTerm(lval, w.Operation, w.Value)
 

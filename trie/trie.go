@@ -2,7 +2,7 @@ package trie
 
 import (
 	"github.com/hyperdelta/refinery/log"
-	"fmt"
+	"encoding/json"
 )
 
 var (
@@ -32,7 +32,7 @@ func NewTrieElement() *TrieElement {
 }
 
 func (t* Trie) Print() {
-	fmt.Printf("\nprint = %s\n", t)
+	logger.Print(t.root.GetJsonDump())
 }
 
 func (t* Trie) Clear() {
@@ -40,6 +40,7 @@ func (t* Trie) Clear() {
 }
 
 func (t* Trie) Add(data interface{}, prefix ...string) {
+
 	elem := t.root._retrieveElement(prefix...)
 
 	if elem == nil {
@@ -51,6 +52,32 @@ func (t* Trie) Add(data interface{}, prefix ...string) {
 
 func (t* Trie) Retrieve(prefix ...string) interface{} {
 	return t.root.Retrieve(prefix...)
+}
+
+func (e* TrieElement) GetJsonDump() string {
+
+	var result string = ""
+
+	result += "{"
+
+	if len(e.children) > 0 {
+		for i, child := range e.children {
+			result += ("\"" + child.prefix + "\" : ")
+			result += child.GetJsonDump()
+
+			if i < len(e.children) - 1 {
+				result += ","
+			}
+		}
+	} else {
+		// terminal -> data 반환
+		str, _ := json.Marshal(e.data)
+		return string(str)
+	}
+
+	result += "}"
+
+	return result
 }
 
 func (e* TrieElement) Retrieve(prefix ...string) interface{} {

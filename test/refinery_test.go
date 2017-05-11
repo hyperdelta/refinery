@@ -7,7 +7,8 @@ import (
 	"github.com/hyperdelta/refinery/pipeline"
 	"github.com/hyperdelta/refinery/trie"
 	"time"
-	"fmt"
+	"io/ioutil"
+	"strconv"
 )
 
 func TestPipeline(t *testing.T) {
@@ -20,23 +21,44 @@ func TestPipeline(t *testing.T) {
 			for {
 				select {
 				case data := <- p.Out:
-					fmt.Printf("\n%s\n", &data)
+					if data != nil {
+						var t *trie.Trie = data.(*trie.Trie)
+						t.Print()
+					}
+					break
 				}
 			}
 		}()
 	}
 
+	var dataJsonList [][]byte = [][]byte {
+		getByteArray("log/log-1.json"),
+		getByteArray("log/log-2.json"),
+		getByteArray("log/log-3.json"),
+		getByteArray("log/log-4.json"),
+		getByteArray("log/log-5.json"),
+	}
+
 	go func() {
+		var count = 0
 		for {
 			for _, p := range pipeline.PipelineList {
-				log.Print("send data")
-				p.In <- dataJson
-				time.Sleep(time.Second)
+				if count % 1000 == 0 {
+					log.Print("idx = " + strconv.Itoa(count))
+				}
+				p.In <- []byte(dataJsonList[count % 5])
 			}
+
+			count += 1
 		}
 	}()
 
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 3)	// 3초간 유지
+}
+
+func getByteArray(path string) []byte {
+	d, _ := ioutil.ReadFile(path)
+	return d
 }
 
 func TestTrie(t *testing.T) {
@@ -53,7 +75,7 @@ func TestTrie(t *testing.T) {
 		t.Fatal("TestTrie Fail, expected data = data1, retrieve data = " + retData.(string))
 	}
 
-	if  "data2" != retData2 {
+	if "data2" != retData2 {
 		t.Fatal("TestTrie Fail, expected data = data2, retrieve data = " + retData2.(string))
 	}
 
@@ -62,56 +84,34 @@ func TestTrie(t *testing.T) {
 	}
 }
 
-var dataJson []byte = []byte(`
-{
-"ItemNo": "1234567",
-"PaymentAmount": 20000,
-"ShippingAddress": "서울시 강남구.."
-}
-
-`)
 var queryJson []byte = []byte(`{
-"interval": 10,
-"select": [
-{
-"column": "ItemNo",
-"operation": "sum",
-"as": "PaymentAmountSum"
-},
-{
-"column": "ItemNo",
-"operation": "count",
-"as": "ItemNoCount"
-}
-
-],
-"where": {
-"and": [
-{
-"column": "ItemNo",
-"operation": "eq",
-"value": "1234567"
-},
-{
-"column": "PaymentAmount",
-"operation": "gte",
-"value": "20000"
-},
-{
-"column": "ShippingAddress",
-"operation": "match",
-"value": "서울시"
-}
-
-],
-"or": null
-},
-"groupBy": [
-{
-"column": "ShippingAddress",
-"depth": 2
-}
-]
-
-
+	"interval": 10,
+	"select": [
+	{
+		"column": "member_id",
+		"operation": "count",
+		"as": "member_id_count"
+	}
+	],
+	"where": {
+		"and": [
+		{
+			"column": "payload.body.paymentData.NewSmilePay.TotalMoney",
+			"operation": "gte",
+			"value": "10000"
+		},
+		{
+			"column": "payload.body.paymentData.NewSmilePay.TotalMoney",
+			"operation": "lte",
+			"value": "100000"
+		}
+		],
+		"or": null
+	},
+	"groupBy": [
+	{
+		"column": "payload.body.shippingAddressList.[0].DeliveryAddr1",
+		"depth": 2
+	}
+	]
 }`)

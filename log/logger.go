@@ -43,30 +43,38 @@ func Get() *Logger {
 	return l
 }
 
-func printLog(message string) {
+func printLog(message interface{}) {
 	log.Print(message)
 }
 
-func (l *Logger) Error(message string) {
+func (l* Logger) Print(message interface{}) {
+	printLog(message)
+}
+
+func (l *Logger) Error(message interface{}) {
 	if (l.Level >= Error) {
+		//msg, _ := json.Marshal(message)
 		printLog(message)
 	}
 }
 
-func (l*Logger) Warn(message string) {
+func (l*Logger) Warn(message interface{}) {
 	if (l.Level >= Warn) {
+		//msg, _ := json.Marshal(message)
 		printLog(message)
 	}
 }
 
-func (l*Logger) Info(message string) {
+func (l*Logger) Info(message interface{}) {
 	if (l.Level >= Info) {
+		//msg, _ := json.Marshal(message)
 		printLog(message)
 	}
 }
 
-func (l*Logger) Debug(message string) {
+func (l*Logger) Debug(message interface{}) {
 	if (l.Level >= Debug) {
+		//msg, _ := json.Marshal(message)
 		printLog(message)
 	}
 }

@@ -10,35 +10,38 @@ import (
 type StatisticProcessor struct {
 	Processor
 
-	selectQueryList  []query.SelectQueryItem
-	groupByQueryList []query.GroupByQueryItem
+	SelectQueryList  []query.SelectQueryItem
+	GroupByQueryList []query.GroupByQueryItem
 
-	hasGroupBy       bool
+	HasGroupBy       bool
 
-	interval         int
+	Interval         int
 	trie             *trie.Trie
 }
 
 type StatisticTrieData struct {
-	dataMap map[string]*StatisticData
+	DataMap map[string]*StatisticData
 }
 
 type StatisticData struct {
-	column string
-	value int64
+	Column string
+	Value  int64
 }
+
+const MIN_VALUE int64 =  -int64(^uint(0) >> 1) - 1
+const WILDCARD string = "@"
 
 func NewStatisticTrieData() *StatisticTrieData {
 	data := new(StatisticTrieData)
-	data.dataMap = make(map[string]*StatisticData)
+	data.DataMap = make(map[string]*StatisticData)
 
 	return data
 }
 
 func NewStatisticData(column string) *StatisticData {
 	elem := new(StatisticData)
-	elem.column = column
-	elem.value = 0
+	elem.Column = column
+	elem.Value = MIN_VALUE
 
 	return elem
 }
@@ -46,9 +49,9 @@ func NewStatisticData(column string) *StatisticData {
 func NewStatisticProcessor(interval int, s []query.SelectQueryItem, g []query.GroupByQueryItem) *StatisticProcessor {
 	sp := new(StatisticProcessor)
 
-	sp.interval = interval
-	sp.selectQueryList = s
-	sp.groupByQueryList = g
+	sp.Interval = interval
+	sp.SelectQueryList = s
+	sp.GroupByQueryList = g
 
 	sp.buildStatisticPlan(s, g)
 
@@ -79,7 +82,7 @@ func (p* StatisticProcessor) process(in chan interface{}) chan interface{} {
 func (p* StatisticProcessor) buildStatisticPlan(s []query.SelectQueryItem, g []query.GroupByQueryItem) {
 
 	if g != nil && len(g) > 0 {
-		p.hasGroupBy = true
+		p.HasGroupBy = true
 		p.trie = trie.NewTrie()
 	}
 
@@ -89,14 +92,22 @@ func (p* StatisticProcessor) doOperation(data map[string]string) {
 
 	var prefix []string
 
-	if p.hasGroupBy {
+	if p.HasGroupBy {
 		/// make prefix
-
-		for _, groupby_item := range p.groupByQueryList {
+		for _, groupby_item := range p.GroupByQueryList {
 			var groupby_data = data[groupby_item.Column]
 			var splited_groupby_data = strings.Split(groupby_data, " ")
 
-			prefix = append(prefix, splited_groupby_data[:groupby_item.Depth]...)
+			if len(splited_groupby_data) >= groupby_item.Depth {
+				prefix = append(prefix, splited_groupby_data[:groupby_item.Depth]...)
+			} else {
+				// 요청한 group by depth 보다 모자람
+				// 나머지는 wildcard 로 대체
+				prefix = append(prefix, splited_groupby_data...)
+				for i := 0; i < groupby_item.Depth - len(splited_groupby_data) ; i++ {
+					prefix = append(prefix, WILDCARD)
+				}
+			}
 		}
 
 	} else {
@@ -106,32 +117,38 @@ func (p* StatisticProcessor) doOperation(data map[string]string) {
 	// find groupby prefix
 	var trieData = p.trie.Retrieve(prefix ...)
 	var statisticData *StatisticData
+	//var addTrieData bool = false
 
 	// 처음 생긴 groupby 정보라면 새로 생성
 	if trieData == nil {
 		trieData = NewStatisticTrieData()
-		p.trie.Add(trieData, prefix...)
-		p.trie.Print()
+		//addTrieData = true
 	}
 
 	// select 문을 순회하면서 통계 처리
-	for _, select_item := range p.selectQueryList {
-		statisticData = (trieData.(*StatisticTrieData)).dataMap[select_item.As]
+	for _, select_item := range p.SelectQueryList {
+		statisticData = (trieData.(*StatisticTrieData)).DataMap[select_item.As]
 
 		if statisticData == nil {
 			statisticData = NewStatisticData(select_item.As)
-			(trieData.(*StatisticTrieData)).dataMap[select_item.As] = statisticData
+			(trieData.(*StatisticTrieData)).DataMap[select_item.As] = statisticData
 		}
 
 		statisticData.doOperation(data[select_item.Column], select_item.Operation)
 	}
 
+	p.trie.Add(trieData, prefix...)
 }
 
 func (d* StatisticData) doOperation(value string, op string) {
+
 	switch op {
 	case "count":
-		d.value += 1
+		if d.Value == MIN_VALUE {
+			d.Value = 0
+		}
+
+		d.Value += 1
 		return
 	}
 
@@ -141,16 +158,20 @@ func (d* StatisticData) doOperation(value string, op string) {
 
 		switch op {
 		case "sum":
-			d.value += v
+			if d.Value == MIN_VALUE {
+				d.Value = 0
+			}
+
+			d.Value += v
 			return
 		case "max":
-			if d.value < v {
-				d.value = v
+			if d.Value < v {
+				d.Value = v
 			}
 			return
 		case "min":
-			if d.value > v {
-				d.value = v
+			if d.Value == MIN_VALUE || d.Value > v {
+				d.Value = v
 			}
 			return
 		}
