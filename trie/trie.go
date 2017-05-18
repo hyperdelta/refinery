@@ -31,6 +31,13 @@ func NewTrieElement() *TrieElement {
 	return elem
 }
 
+func (t* Trie) ToDataMap() map[string]interface{} {
+	var result map[string]interface{} = make(map[string]interface{})
+	t.root.ToDataMap("", result)
+
+	return result
+}
+
 func (t* Trie) Print() {
 	logger.Print(t.root.GetJsonDump())
 }
@@ -52,6 +59,22 @@ func (t* Trie) Add(data interface{}, prefix ...string) {
 
 func (t* Trie) Retrieve(prefix ...string) interface{} {
 	return t.root.Retrieve(prefix...)
+}
+
+func (e* TrieElement) ToDataMap (prefix string, dataMap map[string]interface{}) {
+
+	if prefix != "" {
+		prefix += " "
+	}
+
+	if len(e.children) > 0 {
+		for _, child := range e.children {
+			child.ToDataMap(prefix + child.prefix, dataMap)
+		}
+	} else {
+		// terminal
+		dataMap[prefix] = e.data
+	}
 }
 
 func (e* TrieElement) GetJsonDump() string {

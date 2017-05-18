@@ -2,13 +2,12 @@ package test
 
 import (
 	"testing"
-	"log"
 	"github.com/hyperdelta/refinery/query"
 	"github.com/hyperdelta/refinery/pipeline"
 	"github.com/hyperdelta/refinery/trie"
 	"time"
 	"io/ioutil"
-	"strconv"
+	"log"
 )
 
 func TestPipeline(t *testing.T) {
@@ -22,8 +21,7 @@ func TestPipeline(t *testing.T) {
 				select {
 				case data := <- p.Out:
 					if data != nil {
-						var t *trie.Trie = data.(*trie.Trie)
-						t.Print()
+						log.Print(data)
 					}
 					break
 				}
@@ -42,13 +40,7 @@ func TestPipeline(t *testing.T) {
 	go func() {
 		var count = 0
 		for {
-			for _, p := range pipeline.PipelineList {
-				if count % 1000 == 0 {
-					log.Print("idx = " + strconv.Itoa(count))
-				}
-				p.In <- []byte(dataJsonList[count % 5])
-			}
-
+			pipeline.SendDataToAllPipeline(dataJsonList[count % 5])
 			count += 1
 		}
 	}()
@@ -85,7 +77,7 @@ func TestTrie(t *testing.T) {
 }
 
 var queryJson []byte = []byte(`{
-	"interval": 10,
+	"interval": 1,
 	"select": [
 	{
 		"column": "member_id",

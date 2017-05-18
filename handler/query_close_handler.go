@@ -2,13 +2,17 @@ package handler
 
 import (
 	"net/http"
-	"github.com/buger/jsonparser"
 	"github.com/gorilla/mux"
-	"io/ioutil"
+	"encoding/json"
 )
 
 type QueryCloseHandler struct {
 	Handler
+}
+
+type QueryCloseResponseModel struct {
+	Result string 		`json:"result"`
+	Message string		`json:"message"`
 }
 
 /**
@@ -29,9 +33,19 @@ func (h *QueryCloseHandler) RegisterHandlePath() {
 }
 
 func (h *QueryCloseHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	body, _ := ioutil.ReadAll(r.Body)
+	var params = mux.Vars(r)
+	var id = params["id"]
+	var response = QueryCloseResponseModel{};
 
-	res, _, _, _ := jsonparser.Get(body,"test")
-	rw.Write(res)
+	if id == "" {
+		response.Result = "fail"
+		response.Message = "ID need!"
+	} else {
+		// TODO: rethinkdb
+		response.Result = "success"
+	}
+
+	ret, _ := json.Marshal(response)
+	rw.Write(ret)
 }
 

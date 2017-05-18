@@ -5,6 +5,7 @@ import (
 	"github.com/hyperdelta/refinery/trie"
 	"strings"
 	"strconv"
+	"time"
 )
 
 type StatisticProcessor struct {
@@ -15,7 +16,8 @@ type StatisticProcessor struct {
 
 	HasGroupBy       bool
 
-	Interval         int
+	Interval         time.Duration
+	tickerChannel 	 <-chan time.Time
 	trie             *trie.Trie
 }
 
@@ -46,12 +48,14 @@ func NewStatisticData(column string) *StatisticData {
 	return elem
 }
 
-func NewStatisticProcessor(interval int, s []query.SelectQueryItem, g []query.GroupByQueryItem) *StatisticProcessor {
+func NewStatisticProcessor(interval time.Duration, s []query.SelectQueryItem, g []query.GroupByQueryItem) *StatisticProcessor {
 	sp := new(StatisticProcessor)
 
 	sp.Interval = interval
 	sp.SelectQueryList = s
 	sp.GroupByQueryList = g
+
+	sp.tickerChannel = time.NewTicker(time.Second * interval).C
 
 	sp.buildStatisticPlan(s, g)
 
@@ -67,11 +71,9 @@ func (p* StatisticProcessor) process(in chan interface{}) chan interface{} {
 			case data := <-in:
 				if data != nil {
 					p.doOperation(data.(map[string]string))
-					out <- p.trie
-				} else {
-					// bypass
-					out <- nil
 				}
+			case <- p.tickerChannel:
+				out <- p.trie.ToDataMap()
 			}
 		}
 	}()
@@ -111,7 +113,8 @@ func (p* StatisticProcessor) doOperation(data map[string]string) {
 		}
 
 	} else {
-		// groupby 없음
+		// groupby 없음 - prefix 는 wildcard 로..
+		prefix = append(prefix, WILDCARD)
 	}
 
 	// find groupby prefix

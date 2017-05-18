@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/hyperdelta/refinery/log"
+	"time"
 )
 
 var (
@@ -11,7 +12,7 @@ var (
 )
 
 type Query struct {
-	Interval     int				`json:"interval"`
+	Interval     time.Duration		`json:"interval"`
 	SelectFields []SelectQueryItem	`json:"select"`
 	WhereQuery   WhereQuery			`json:"where"`
 	GroupByQuery []GroupByQueryItem		`json:"groupBy"`
