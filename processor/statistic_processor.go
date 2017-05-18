@@ -74,6 +74,7 @@ func (p* StatisticProcessor) process(in chan interface{}) chan interface{} {
 				}
 			case <- p.tickerChannel:
 				out <- p.trie.ToDataMap()
+				p.trie.Clear()
 			}
 		}
 	}()

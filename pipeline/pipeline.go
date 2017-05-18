@@ -22,7 +22,7 @@ const (
 
 type Pipeline struct {
 	In chan interface{}	// input channel
-	Out chan interface{}	// output channel
+	//Out chan interface{}	// output channel
 
 	Lifetime int
 	Endpoint string
@@ -155,13 +155,14 @@ func (p* Pipeline) SetupProcessors(q *query.Query) error {
 	processors = append(processors, processor.NewJsonParseProcessor(q))
 	processors = append(processors, processor.NewFilterProcessor(q.WhereQuery))
 	processors = append(processors, processor.NewStatisticProcessor(q.Interval, q.SelectFields, q.GroupByQuery))
+	processors = append(processors, processor.NewRethinkDBProcessor(p.Id))
 
 	// entry point
-	in, out := processor.ChainProcessors(processors)
+	in := processor.ChainProcessors(processors)
 
 	p.processors = processors
 	p.In = in
-	p.Out = out
+	//p.Out = out
 
 	return err
 }

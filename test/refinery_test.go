@@ -7,27 +7,12 @@ import (
 	"github.com/hyperdelta/refinery/trie"
 	"time"
 	"io/ioutil"
-	"log"
 )
 
 func TestPipeline(t *testing.T) {
 
 	var q, _ = query.Get(queryJson)
 	pipeline.CreateFromQuery(q)
-
-	for _, p := range pipeline.PipelineList {
-		go func() {
-			for {
-				select {
-				case data := <- p.Out:
-					if data != nil {
-						log.Print(data)
-					}
-					break
-				}
-			}
-		}()
-	}
 
 	var dataJsonList [][]byte = [][]byte {
 		getByteArray("log/log-1.json"),

@@ -14,9 +14,12 @@ type ProcessorInterface interface {
 	process(in chan interface{}) chan interface{}
 }
 
-func ChainProcessors(processors []ProcessorInterface) (chan interface{}, chan interface{}) {
+type DBProcessorInterface interface {
+	ProcessorInterface
+}
+
+func ChainProcessors(processors []ProcessorInterface) (chan interface{}) {
 	var in = make(chan interface{})
-	var out chan interface{} = nil;
 
 	var tmp_in chan interface{} = in
 	var tmp_out chan interface{}
@@ -26,7 +29,5 @@ func ChainProcessors(processors []ProcessorInterface) (chan interface{}, chan in
 		tmp_in = tmp_out
 	}
 
-	out = tmp_out
-
-	return in, out
+	return in
 }
