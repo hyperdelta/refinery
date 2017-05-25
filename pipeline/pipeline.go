@@ -155,7 +155,7 @@ func (p* Pipeline) SetupProcessors(q *query.Query) error {
 	processors = append(processors, processor.NewJsonParseProcessor(q))
 	processors = append(processors, processor.NewFilterProcessor(q.WhereQuery))
 	processors = append(processors, processor.NewStatisticProcessor(q.Interval, q.SelectFields, q.GroupByQuery))
-	processors = append(processors, processor.NewRethinkDBProcessor(p.Id))
+	processors = append(processors, processor.NewRethinkDBProcessor(p.Id, q))
 
 	// entry point
 	in := processor.ChainProcessors(processors)

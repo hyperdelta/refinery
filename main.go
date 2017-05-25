@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	conf = config.Config{ListenAddress: "", ListenPort:3000}
+	conf = config.RefineryConfig
 	defaultRouter *mux.Router
 	logger *log.Logger = log.Get()
 )

@@ -21,27 +21,28 @@ type StatisticProcessor struct {
 	trie             *trie.Trie
 }
 
-type StatisticTrieData struct {
-	DataMap map[string]*StatisticData
+type StatTrieData struct {
+	DataMap map[string]*StatData
 }
 
-type StatisticData struct {
-	Column string
-	Value  int64
+type StatData struct {
+	Column	 	string			`json:"column"`
+	Operation 	string			`json:"operation"`
+	Value 		string			`json:"value"`
 }
 
 const MIN_VALUE int64 =  -int64(^uint(0) >> 1) - 1
 const WILDCARD string = "@"
 
-func NewStatisticTrieData() *StatisticTrieData {
-	data := new(StatisticTrieData)
-	data.DataMap = make(map[string]*StatisticData)
+func NewStatisticTrieData() *StatTrieData {
+	data := new(StatTrieData)
+	data.DataMap = make(map[string]*StatData)
 
 	return data
 }
 
-func NewStatisticData(column string) *StatisticData {
-	elem := new(StatisticData)
+func NewStatisticData(column string) *StatData {
+	elem := new(StatData)
 	elem.Column = column
 	elem.Value = MIN_VALUE
 
@@ -120,7 +121,7 @@ func (p* StatisticProcessor) doOperation(data map[string]string) {
 
 	// find groupby prefix
 	var trieData = p.trie.Retrieve(prefix ...)
-	var statisticData *StatisticData
+	var statisticData *StatData
 	//var addTrieData bool = false
 
 	// 처음 생긴 groupby 정보라면 새로 생성
@@ -131,11 +132,11 @@ func (p* StatisticProcessor) doOperation(data map[string]string) {
 
 	// select 문을 순회하면서 통계 처리
 	for _, select_item := range p.SelectQueryList {
-		statisticData = (trieData.(*StatisticTrieData)).DataMap[select_item.As]
+		statisticData = (trieData.(*StatTrieData)).DataMap[select_item.As]
 
 		if statisticData == nil {
 			statisticData = NewStatisticData(select_item.As)
-			(trieData.(*StatisticTrieData)).DataMap[select_item.As] = statisticData
+			(trieData.(*StatTrieData)).DataMap[select_item.As] = statisticData
 		}
 
 		statisticData.doOperation(data[select_item.Column], select_item.Operation)
@@ -144,7 +145,7 @@ func (p* StatisticProcessor) doOperation(data map[string]string) {
 	p.trie.Add(trieData, prefix...)
 }
 
-func (d* StatisticData) doOperation(value string, op string) {
+func (d*StatData) doOperation(value string, op string) {
 
 	switch op {
 	case "count":
