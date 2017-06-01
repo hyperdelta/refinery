@@ -16,7 +16,7 @@ type RethinkDBProcessor struct {
 	startTime 	time.Time
 	endTime 	time.Time
 
-	query 		query.Query
+	query 		*query.Query
 }
 
 type RethinkDataSchema struct {
@@ -38,7 +38,7 @@ var (
 	conf = config.RefineryConfig
 )
 
-func NewRethinkDBProcessor(pipelineId string, query query.Query) *RethinkDBProcessor {
+func NewRethinkDBProcessor(pipelineId string, query *query.Query) *RethinkDBProcessor {
 	rp := new(RethinkDBProcessor)
 
 	rp.pipelineId = pipelineId
@@ -84,12 +84,12 @@ func (p* RethinkDBProcessor) process(in chan interface{}) chan interface{} {
 
 func (p* RethinkDBProcessor) insert(dataMap map[string]interface{}) {
 
-	var dataList [len(dataMap)]DataSchema;
+	var dataList = make([]DataSchema, len(dataMap))
 	var i = 0;
 
 	// Data
 	for k, v := range dataMap {
-		var group [1]string;
+		var group = make([]string, 1);
 
 		if k == WILDCARD {	// wildcard 의 경우, group 이 없는 케이스이므로 nil 전달
 			group = nil
@@ -99,23 +99,28 @@ func (p* RethinkDBProcessor) insert(dataMap map[string]interface{}) {
 
 		var data = DataSchema {
 			Group: group,
-			Stat: v,
+			Stat: v.([]StatData),
 		}
 
 		dataList[i] = data
 		i ++
 	}
 
-	// GroupBy list
+	// GroupBy column name
+	var groupByColumnNameList = make([]string, len(p.query.GroupByQuery))
 
-
+	for i, v := range p.query.GroupByQuery {
+		groupByColumnNameList[i] = v.Column;
+	};
 
 	var resultData = RethinkDataSchema {
+		UserId: p.query.UserId,
+		Interval: p.query.Interval,
 		StartTime: p.startTime.Format("2017-04-06 12:56:00"),
 		EndTime: p.endTime.Format("2017-04-06 12:56:05"),
-		GroupBy: len(p.query.GroupByQuery) > 0 ?  : nil,
+		GroupBy: groupByColumnNameList,
 		Data: dataList,
 	};
 
-	r.DB("test").Table("test").Insert(resultData).Exec(p.session)
+	r.DB(conf.RethinkDBName).Table(p.query.UserId).Insert(resultData).Exec(p.session)
 }

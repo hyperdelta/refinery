@@ -12,6 +12,7 @@ var (
 )
 
 type Query struct {
+	UserId		 string 			`json:"_userId"`
 	Interval     time.Duration		`json:"interval"`
 	SelectFields []SelectQueryItem	`json:"select"`
 	WhereQuery   WhereQuery			`json:"where"`

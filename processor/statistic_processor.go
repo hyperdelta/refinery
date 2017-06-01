@@ -28,7 +28,7 @@ type StatTrieData struct {
 type StatData struct {
 	Column	 	string			`json:"column"`
 	Operation 	string			`json:"operation"`
-	Value 		string			`json:"value"`
+	Value 		int64			`json:"value"`
 }
 
 const MIN_VALUE int64 =  -int64(^uint(0) >> 1) - 1
@@ -90,6 +90,12 @@ func (p* StatisticProcessor) buildStatisticPlan(s []query.SelectQueryItem, g []q
 		p.trie = trie.NewTrie()
 	}
 
+	// select 에 As 가 비어있는 경우 column 으로 대체
+	for _, v := range s {
+		if v.As == "" {
+			v.As = v.Column
+		}
+	}
 }
 
 func (p* StatisticProcessor) doOperation(data map[string]string) {

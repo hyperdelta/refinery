@@ -15,6 +15,7 @@ type Config struct {
 	RethinkDBAddress string
 	RethinkDBPort int
 	HttpServerOptions HttpServerOptionsConfig
+	RethinkDBName string
 }
 
 func GenerateRandomID(prefix string) string {
@@ -24,7 +25,8 @@ func GenerateRandomID(prefix string) string {
 
 var RefineryConfig = Config {
 	ListenAddress: "",
-	ListenPort: 3000,
+	ListenPort: 4000,
 	RethinkDBAddress: "0.0.0.0",
 	RethinkDBPort: 32770,
+	RethinkDBName: "delta",
 }
