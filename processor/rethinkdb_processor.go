@@ -5,6 +5,7 @@ import (
 	r "gopkg.in/gorethink/gorethink.v3"
 	"github.com/hyperdelta/refinery/config"
 	"github.com/hyperdelta/refinery/query"
+	"strconv"
 )
 
 
@@ -44,8 +45,10 @@ func NewRethinkDBProcessor(pipelineId string, query *query.Query) *RethinkDBProc
 	rp.pipelineId = pipelineId
 	rp.query = query
 
+	logger.Error(conf.RethinkDBAddress + ":" + strconv.Itoa(conf.RethinkDBPort))
+
 	session, err := r.Connect(r.ConnectOpts {
-		Address:    conf.RethinkDBAddress + ":" + string(conf.RethinkDBPort),
+		Address:    conf.RethinkDBAddress + ":" + strconv.Itoa(conf.RethinkDBPort),
 		InitialCap: 10,
 		MaxOpen:    10,
 	})

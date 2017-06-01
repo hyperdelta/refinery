@@ -25,8 +25,8 @@ func GenerateRandomID(prefix string) string {
 
 var RefineryConfig = Config {
 	ListenAddress: "",
-	ListenPort: 4000,
+	ListenPort: 3000,
 	RethinkDBAddress: "0.0.0.0",
-	RethinkDBPort: 32770,
-	RethinkDBName: "delta",
+	RethinkDBPort: 32769,
+	RethinkDBName: "comsat_station",
 }
