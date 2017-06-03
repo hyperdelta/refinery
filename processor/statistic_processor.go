@@ -29,6 +29,12 @@ type StatData struct {
 	Column	 	string			`json:"column"`
 	Operation 	string			`json:"operation"`
 	Value 		int64			`json:"value"`
+	extraValue 		interface{}		// 노출은 안하는데 계산에 필요한 값
+}
+
+type AvgExtraValues struct {
+	sum 		int64
+	total		int64
 }
 
 const MIN_VALUE int64 =  -int64(^uint(0) >> 1) - 1
@@ -74,8 +80,10 @@ func (p* StatisticProcessor) process(in chan interface{}) chan interface{} {
 					p.doOperation(data.(map[string]string))
 				}
 			case <- p.tickerChannel:
-				out <- p.trie.ToDataMap()
-				p.trie.Clear()
+				if !p.trie.IsEmpty() {
+					out <- p.trie.ToDataMap()
+					p.trie.Clear()
+				}
 			}
 		}
 	}()
@@ -153,6 +161,8 @@ func (p* StatisticProcessor) doOperation(data map[string]string) {
 
 func (d*StatData) doOperation(value string, op string) {
 
+	d.Operation = op
+
 	switch op {
 	case "count":
 		if d.Value == MIN_VALUE {
@@ -185,6 +195,23 @@ func (d*StatData) doOperation(value string, op string) {
 				d.Value = v
 			}
 			return
+
+		case "avg":
+			var extras *AvgExtraValues
+
+			if d.extraValue == nil {
+				//d.extraValue =
+				extras = new(AvgExtraValues)
+				extras.sum = 0
+				extras.total = 0
+			} else {
+				extras = d.extraValue.(*AvgExtraValues)
+			}
+
+			extras.sum += v
+			extras.total ++
+
+			d.Value = extras.sum / extras.total
 		}
 	}
 }

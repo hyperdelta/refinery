@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"github.com/gorilla/mux"
 	"encoding/json"
+	"github.com/hyperdelta/refinery/pipeline"
 )
 
 type QueryCloseHandler struct {
@@ -41,6 +42,7 @@ func (h *QueryCloseHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		response.Result = "fail"
 		response.Message = "ID need!"
 	} else {
+		pipeline.Close(id)
 		// TODO: rethinkdb
 		response.Result = "success"
 	}

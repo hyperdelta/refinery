@@ -27,6 +27,6 @@ var RefineryConfig = Config {
 	ListenAddress: "",
 	ListenPort: 3000,
 	RethinkDBAddress: "0.0.0.0",
-	RethinkDBPort: 32769,
+	RethinkDBPort: 32772,
 	RethinkDBName: "comsat_station",
 }

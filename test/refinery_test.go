@@ -30,7 +30,7 @@ func TestPipeline(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(time.Second * 3)	// 3초간 유지
+	time.Sleep(time.Second * 10)	// 3초간 유지
 }
 
 func getByteArray(path string) []byte {
@@ -63,11 +63,17 @@ func TestTrie(t *testing.T) {
 
 var queryJson []byte = []byte(`{
 	"interval": 1,
+	"_userId": "tester2",
 	"select": [
 	{
 		"column": "member_id",
 		"operation": "count",
 		"as": "member_id_count"
+	},
+	{
+		"column": "payload.body.paymentData.NewSmilePay.TotalMoney",
+		"operation": "avg",
+		"as": "total_money_avg"
 	}
 	],
 	"where": {

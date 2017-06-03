@@ -21,7 +21,6 @@ type RethinkDBProcessor struct {
 }
 
 type RethinkDataSchema struct {
-	Id 			string 			`json:"_id"`
 	UserId	 	string			`json:"_userId"`
 	Interval	time.Duration	`json:"interval"`
 	StartTime	string			`json:"starttime"`
@@ -32,7 +31,7 @@ type RethinkDataSchema struct {
 
 type DataSchema struct {
 	Group 		[]string		`json:"group"`
-	Stat 		[]StatData		`json:"stat"`
+	Stat 		[]*StatData		`json:"stat"`
 }
 
 var (
@@ -58,6 +57,8 @@ func NewRethinkDBProcessor(pipelineId string, query *query.Query) *RethinkDBProc
 	} else {
 		logger.Error(err)
 	}
+
+	r.DB(conf.RethinkDBName).TableCreate(query.UserId).Exec(rp.session)
 
 	rp.startTime = time.Now()
 	return rp
@@ -100,9 +101,17 @@ func (p* RethinkDBProcessor) insert(dataMap map[string]interface{}) {
 			group[0] = k
 		}
 
+		var statList = make([]*StatData, len(v.(*StatTrieData).DataMap))
+
+		var j = 0
+		for _, stat_val := range v.(*StatTrieData).DataMap {
+			statList[j] = stat_val
+			j++
+		}
+
 		var data = DataSchema {
 			Group: group,
-			Stat: v.([]StatData),
+			Stat: statList,
 		}
 
 		dataList[i] = data
@@ -119,11 +128,14 @@ func (p* RethinkDBProcessor) insert(dataMap map[string]interface{}) {
 	var resultData = RethinkDataSchema {
 		UserId: p.query.UserId,
 		Interval: p.query.Interval,
-		StartTime: p.startTime.Format("2017-04-06 12:56:00"),
-		EndTime: p.endTime.Format("2017-04-06 12:56:05"),
+		StartTime: p.startTime.Format("2006-01-02 15:04:05"),
+		EndTime: p.endTime.Format("2006-01-02 15:04:05"),
 		GroupBy: groupByColumnNameList,
 		Data: dataList,
 	};
 
-	r.DB(conf.RethinkDBName).Table(p.query.UserId).Insert(resultData).Exec(p.session)
+	r.DB(conf.RethinkDBName).
+		Table(p.query.UserId).
+		Insert(resultData).
+		Exec(p.session)
 }

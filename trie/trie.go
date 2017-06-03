@@ -46,6 +46,10 @@ func (t* Trie) Clear() {
 	t.root = new(TrieElement)
 }
 
+func (t* Trie) IsEmpty() bool {
+	return len(t.root.children) <= 0
+}
+
 func (t* Trie) Add(data interface{}, prefix ...string) {
 
 	elem := t.root._retrieveElement(prefix...)
